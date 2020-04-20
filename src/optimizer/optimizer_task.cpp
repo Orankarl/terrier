@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -383,6 +384,43 @@ void TopDownRewrite::Execute() {
   auto cur_group = GetMemo().GetGroupByID(group_id_);
   auto cur_group_expr = cur_group->GetLogicalExpression();
 
+  auto op = cur_group_expr->Op();
+  std::cout << "[TopDown]" << cur_group_expr->Op().GetName() << " ";
+  std::cout << group_id_ << std::endl;
+  if (op.GetType() == OpType::LOGICALFILTER) {
+    auto filter = op.As<LogicalFilter>();
+    if (filter != nullptr) {
+      auto predicates = filter->GetPredicates();
+      for (auto predicate : predicates) {
+        auto expr = predicate.GetExpr().Get();
+        std::string s = expr->ToJson().dump();
+        std::cout << s << std::endl;
+      }
+    }
+  } else if (op.GetType() == OpType::LOGICALMARKJOIN) {
+    auto join = op.As<LogicalMarkJoin>();
+    if (join != nullptr) {
+      auto predicates = join->GetJoinPredicates();
+//      std::cout << predicates.size() << std::endl;
+      for (auto predicate : predicates) {
+        auto expr = predicate.GetExpr().Get();
+        std::string s = expr->ToJson().dump();
+        std::cout << s << std::endl;
+      }
+    }
+  } else if (op.GetType() == OpType::LOGICALINNERJOIN) {
+    auto join = op.As<LogicalInnerJoin>();
+    if (join != nullptr) {
+      auto predicates = join->GetJoinPredicates();
+//      std::cout << predicates.size() << std::endl;
+      for (auto predicate : predicates) {
+        auto expr = predicate.GetExpr().Get();
+        std::string s = expr->ToJson().dump();
+        std::cout << s << std::endl;
+      }
+    }
+  }
+
   // Construct valid transformation rules from rule set
   std::vector<Rule *> set = GetRuleSet().GetRulesByName(rule_set_name_);
   ConstructValidRules(cur_group_expr, set, &valid_rules);
@@ -394,6 +432,7 @@ void TopDownRewrite::Execute() {
     Rule *rule = r.GetRule();
     GroupExprBindingIterator iterator(GetMemo(), cur_group_expr, rule->GetMatchPattern());
     if (iterator.HasNext()) {
+      std::cout << static_cast<int32_t>(rule->GetType()) << std::endl;
       auto before = iterator.Next();
       TERRIER_ASSERT(!iterator.HasNext(), "there should only be 1 binding");
       std::vector<std::unique_ptr<OperatorNode>> after;
@@ -413,12 +452,19 @@ void TopDownRewrite::Execute() {
   }
 
   size_t size = cur_group_expr->GetChildrenGroupsSize();
+  if (size > 0) std::cout << "[TopDown]" << "Children: ";
   for (size_t child_group_idx = 0; child_group_idx < size; child_group_idx++) {
     // Need to rewrite all sub trees first
     auto id = cur_group_expr->GetChildGroupId(static_cast<int>(child_group_idx));
     auto task = new TopDownRewrite(id, context_, rule_set_name_);
+
+    auto child_group = GetMemo().GetGroupByID(id);
+    auto child_group_expr = child_group->GetLogicalExpression();
+    std::cout << child_group_expr->Op().GetName() << " " << id << "  ";
+
     PushTask(task);
   }
+  if (size > 0) std::cout << std::endl;
 }
 
 void BottomUpRewrite::Execute() {
@@ -427,16 +473,62 @@ void BottomUpRewrite::Execute() {
   auto cur_group = GetMemo().GetGroupByID(group_id_);
   auto cur_group_expr = cur_group->GetLogicalExpression();
 
+  auto op = cur_group_expr->Op();
+  std::cout << "[BottomUp]" << cur_group_expr->Op().GetName() << " ";
+  std::cout << group_id_ << std::endl;
+  if (op.GetType() == OpType::LOGICALFILTER) {
+    auto filter = op.As<LogicalFilter>();
+    if (filter != nullptr) {
+      auto predicates = filter->GetPredicates();
+      for (auto predicate : predicates) {
+        auto expr = predicate.GetExpr().Get();
+        std::string s = expr->ToJson().dump();
+        std::cout << s << std::endl;
+      }
+    }
+  } else if (op.GetType() == OpType::LOGICALMARKJOIN) {
+    auto join = op.As<LogicalMarkJoin>();
+    if (join != nullptr) {
+      auto predicates = join->GetJoinPredicates();
+//      std::cout << predicates.size() << std::endl;
+      for (auto predicate : predicates) {
+        auto expr = predicate.GetExpr().Get();
+        std::string s = expr->ToJson().dump();
+        std::cout << s << std::endl;
+      }
+    }
+  } else if (op.GetType() == OpType::LOGICALINNERJOIN) {
+    auto join = op.As<LogicalInnerJoin>();
+    if (join != nullptr) {
+      auto predicates = join->GetJoinPredicates();
+//      std::cout << predicates.size() << std::endl;
+      for (auto predicate : predicates) {
+        auto expr = predicate.GetExpr().Get();
+        std::string s = expr->ToJson().dump();
+        std::cout << s << std::endl;
+      }
+    }
+  }
+
+
   if (!has_optimized_child_) {
     PushTask(new BottomUpRewrite(group_id_, context_, rule_set_name_, true));
 
     size_t size = cur_group_expr->GetChildrenGroupsSize();
+
+    if (size > 0) std::cout << "[BottomUp]" << "Children: ";
     for (size_t child_group_idx = 0; child_group_idx < size; child_group_idx++) {
       // Need to rewrite all sub trees first
       auto id = cur_group_expr->GetChildGroupId(static_cast<int>(child_group_idx));
       auto task = new BottomUpRewrite(id, context_, rule_set_name_, false);
+
+      auto child_group = GetMemo().GetGroupByID(id);
+      auto child_group_expr = child_group->GetLogicalExpression();
+      std::cout << child_group_expr->Op().GetName() << " " << id << "  ";
+
       PushTask(task);
     }
+    if (size > 0) std::cout << std::endl;
     return;
   }
 
@@ -451,6 +543,7 @@ void BottomUpRewrite::Execute() {
     Rule *rule = r.GetRule();
     GroupExprBindingIterator iterator(GetMemo(), cur_group_expr, rule->GetMatchPattern());
     if (iterator.HasNext()) {
+      std::cout << static_cast<int32_t>(rule->GetType()) << std::endl;
       auto before = iterator.Next();
       TERRIER_ASSERT(!iterator.HasNext(), "should only bind to 1");
       std::vector<std::unique_ptr<OperatorNode>> after;
