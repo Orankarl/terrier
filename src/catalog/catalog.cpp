@@ -102,6 +102,7 @@ bool Catalog::CreateDatabase(const common::ManagedPointer<transaction::Transacti
   });
   bool success = Catalog::CreateDatabaseEntry(common::ManagedPointer(txn), db_oid, name, dbc);
   if (bootstrap) dbc->Bootstrap(txn);  // Bootstrap the created database
+
   return success;
 }
 

@@ -737,6 +737,8 @@ table_oid_t DatabaseCatalog::CreateTable(const common::ManagedPointer<transactio
   if (!TryLock(txn)) return INVALID_TABLE_OID;
   const table_oid_t table_oid = static_cast<table_oid_t>(next_oid_++);
 
+  std::cout << "Table: " << name << " id: " << static_cast<uint32_t>(table_oid) << std::endl;
+
   return CreateTableEntry(txn, table_oid, ns, name, schema) ? table_oid : INVALID_TABLE_OID;
 }
 
@@ -1992,6 +1994,11 @@ bool DatabaseCatalog::CreateTableEntry(const common::ManagedPointer<transaction:
   }
 
   std::vector<Schema::Column> cols = GetColumns<Schema::Column, table_oid_t, col_oid_t>(txn, table_oid);
+
+  for (Schema::Column col : cols) {
+    std::cout << "column: " << col.Name() << " oid: " << static_cast<uint32_t>(col.Oid()) << std::endl;
+  }
+
   auto *new_schema = new Schema(cols);
   txn->RegisterAbortAction([=]() { delete new_schema; });
 
