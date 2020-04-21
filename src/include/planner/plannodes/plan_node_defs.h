@@ -21,22 +21,22 @@ enum class PlanNodeType {
   INVALID = INVALID_TYPE_ID,
 
   // Scan Nodes
-  SEQSCAN,
+  SEQSCAN,  // 1
   INDEXSCAN,
   CSVSCAN,
 
   // Join Nodes
-  NESTLOOP,
+  NESTLOOP, // 4
   HASHJOIN,
   INDEXNLJOIN,
 
   // Mutator Nodes
-  UPDATE,
+  UPDATE,   // 7
   INSERT,
   DELETE,
 
   // DDL Nodes
-  CREATE_DATABASE,
+  CREATE_DATABASE,  // 10
   CREATE_NAMESPACE,
   CREATE_TABLE,
   CREATE_INDEX,
@@ -49,16 +49,16 @@ enum class PlanNodeType {
   DROP_INDEX,
   DROP_TRIGGER,
   DROP_VIEW,
-  ANALYZE,
+  ANALYZE,          // 23
 
   // Algebra Nodes
-  AGGREGATE,
+  AGGREGATE,  // 24
   ORDERBY,
   PROJECTION,
   LIMIT,
   DISTINCT,
   HASH,
-  SETOP,
+  SETOP,      // 30
 
   // Utility
   EXPORT_EXTERNAL_FILE,

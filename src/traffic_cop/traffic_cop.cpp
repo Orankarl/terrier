@@ -1,6 +1,7 @@
 #include "traffic_cop/traffic_cop.h"
 
 #include <future>  // NOLINT
+#include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
@@ -122,15 +123,27 @@ void TrafficCop::ExecuteTransactionStatement(const common::ManagedPointer<networ
   out->WriteCommandComplete(query_type, 0);
 }
 
+void PrintPlanTree(std::unique_ptr<planner::AbstractPlanNode> &plan) {
+  std::string s = plan.get()->ToJson().dump();
+  std::cout << s << std::endl;
+}
+
 std::unique_ptr<planner::AbstractPlanNode> TrafficCop::OptimizeBoundQuery(
     const common::ManagedPointer<network::ConnectionContext> connection_ctx,
     const common::ManagedPointer<parser::ParseResult> query) const {
   TERRIER_ASSERT(connection_ctx->TransactionState() == network::NetworkTransactionStateType::BLOCK,
                  "Not in a valid txn. This should have been caught before calling this function.");
 
-  return TrafficCopUtil::Optimize(connection_ctx->Transaction(), connection_ctx->Accessor(), query,
+//  return TrafficCopUtil::Optimize(connection_ctx->Transaction(), connection_ctx->Accessor(), query,
+//                                  connection_ctx->GetDatabaseOid(), stats_storage_,
+//                                  std::make_unique<optimizer::TrivialCostModel>(), optimizer_timeout_);
+  auto result =  TrafficCopUtil::Optimize(connection_ctx->Transaction(), connection_ctx->Accessor(), query,
                                   connection_ctx->GetDatabaseOid(), stats_storage_,
                                   std::make_unique<optimizer::TrivialCostModel>(), optimizer_timeout_);
+
+  PrintPlanTree(result);
+
+  return result;
 }
 
 TrafficCopResult TrafficCop::ExecuteCreateStatement(

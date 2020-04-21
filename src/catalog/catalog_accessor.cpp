@@ -1,5 +1,6 @@
 #include "catalog/catalog_accessor.h"
 
+#include <iostream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -10,12 +11,17 @@
 namespace terrier::catalog {
 db_oid_t CatalogAccessor::GetDatabaseOid(std::string name) const {
   NormalizeObjectName(&name);
-  return catalog_->GetDatabaseOid(txn_, name);
+//  return catalog_->GetDatabaseOid(txn_, name);
+  auto oid = catalog_->GetDatabaseOid(txn_, name);
+  return oid;
 }
 
 db_oid_t CatalogAccessor::CreateDatabase(std::string name) const {
   NormalizeObjectName(&name);
-  return catalog_->CreateDatabase(txn_, name, true);
+//  return catalog_->CreateDatabase(txn_, name, true);
+  auto oid = catalog_->CreateDatabase(txn_, name, true);
+  std::cout << "Database name: " << name << " oid: " << static_cast<uint32_t>(oid) << std::endl;
+  return oid;
 }
 
 bool CatalogAccessor::DropDatabase(db_oid_t db) const { return catalog_->DeleteDatabase(txn_, db); }
